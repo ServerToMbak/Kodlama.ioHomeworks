@@ -4,9 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Application.Features.ProgramingLanguages.Queries
+namespace Application.Features.Technology.Dto
 {
-    internal class Class1
+    public class DeletedTechnologyDto
     {
+        public int Id { get; set; }
     }
 }

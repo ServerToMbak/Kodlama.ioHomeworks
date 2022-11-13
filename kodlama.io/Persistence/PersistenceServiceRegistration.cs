@@ -21,7 +21,9 @@ namespace Persistence
                                                      options.UseSqlServer(
                                                          configuration.GetConnectionString("RentACarCampOdevDbConnectionString")));
             services.AddScoped<IProgramingLanguageRepository, ProgramingLanguageRepository>();
-
+            services.AddScoped<ITechnologyRepository, TechnologyReposioty>();
+            services.AddScoped<IUserRepository, UserRepositoy>();
+            services.AddScoped<IUserOperationClaimRepository, UserOperationClaimRepository>();
             return services;
         }
     }

@@ -1,4 +1,5 @@
 ﻿using Application.Features.ProgramingLanguages.Rules;
+using Application.Features.Technology.Rules;
 using Core.Application.Pipelines.Validation;
 using FluentValidation;
 using MediatR;
@@ -10,7 +11,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Domain
+namespace Application
 {
     public static class ApplicationServiceRegistration
     {
@@ -21,7 +22,7 @@ namespace Domain
             services.AddMediatR(Assembly.GetExecutingAssembly());
 
            services.AddScoped<ProgramingLanguageBusinessRules>();
-
+            services.AddScoped<TechnologyBusinessRules>();
             services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
             //services.AddTransient(typeof(IPipelineBehavior<,>), typeof(AuthorizationBehavior<,>));
             //services.AddTransient(typeof(IPipelineBehavior<,>), typeof(CachingBehavior<,>));
