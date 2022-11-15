@@ -1,5 +1,6 @@
 ﻿using Application.Features.Auths.Dtos;
 using Application.Features.Auths.Rules;
+using Application.Services.AuthService;
 using Application.Services.Repositories;
 using Core.Security.Dtos;
 using Core.Security.Entities;
@@ -15,45 +16,55 @@ using System.Threading.Tasks;
 
 namespace Application.Features.Auths.Commands.Register
 {
-    public class CreateRegisterCommand:IRequest<RegisteredDto>
+    public class RegisterCommand:IRequest<RegisteredDto>
     {
         public UserForRegisterDto UserForRegisterDto { get; set; }
-        public string IpAdress { get; set; }
+        public string IpAddress { get; set; }
 
-        public class CreateRegisterCommandHandler : IRequestHandler<CreateRegisterCommand, RegisteredDto>
+        public class RegisterCommandHandler : IRequestHandler<RegisterCommand, RegisteredDto>
         {
-            private readonly IAuthenticationService _authService;
+            private readonly IAuthService _authService;
             private readonly IUserRepository _userRepository;
             private readonly AuthBusinessRules _authBusinessRules;
-            private readonly IUserOperationClaimRepository _userOperationRepository;
+           
 
-            public CreateRegisterCommandHandler(IAuthenticationService authService, IUserRepository userRepository, AuthBusinessRules authBusinessRules, IUserOperationClaimRepository userOperationRepository)
+            public RegisterCommandHandler(IAuthService authService, IUserRepository userRepository, AuthBusinessRules authBusinessRules)
             {
                 _authService = authService;
                 _userRepository = userRepository;
                 _authBusinessRules = authBusinessRules;
-                _userOperationRepository = userOperationRepository;
+                
             }
 
-            public async Task<RegisteredDto> Handle(CreateRegisterCommand request, CancellationToken cancellationToken)
+            public async Task<RegisteredDto> Handle(RegisterCommand request, CancellationToken cancellationToken)
             {
+                await _authBusinessRules.EmailCanNotBeDublicatedWhenRegistered(request.UserForRegisterDto.Email);
                 byte[] passwordHash, passwordSalt;
 
                 HashingHelper.CreatePasswordHash(request.UserForRegisterDto.Password,out passwordHash, out passwordSalt);
                 User user = new()
                 {
-                    FirstName = request.UserForRegisterDto.
+                    FirstName = request.UserForRegisterDto.FirstName,
                     LastName = request.UserForRegisterDto.LastName,
                     Email = request.UserForRegisterDto.Email,
                     PasswordSalt = passwordSalt,
                     PasswordHash = passwordHash,
                     Status = true,
                 };
-                User AddedUser =await _userRepository.AddAsync(user);
-                UserOperationClaim userOperationClaim = new() { OperationClaimId = 1,UserId=AddedUser.Id };
-                AccessToken accessToken = await _authService.CreateAccessToken(user);
+                User CreatedUser =await _userRepository.AddAsync(user);
 
+                
+                AccessToken createdAccessToken = await _authService.CreateAccessToken(CreatedUser);
+                RefreshToken createdRefreshToken = await _authService.CreateRefreshToken(CreatedUser, request.IpAddress);
+                RefreshToken addedRefreshToken = await _authService.AddRefreshToken(createdRefreshToken);
 
+                RegisteredDto registeredDto = new()
+                {
+                    RefreshToken = addedRefreshToken,
+                    AccessToken = createdAccessToken
+                };
+
+                return registeredDto;
             }
         }
     }
